@@ -71,12 +71,12 @@ Options:
 
 ## Technology
 
--nestjs: api services and page rendering
--nunjucks: Template engine
+- nestjs: api services and page rendering
+- nunjucks: Template engine
 
 ## api document
-
-[yourSizeUrl]/doc/api
+[DOC](https://uuice.com/uuice-doc)
+[API DOC](https://uuice.com/doc/api)
 
 ## License
 
