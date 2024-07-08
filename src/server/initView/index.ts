@@ -38,8 +38,6 @@ export async function initView(app: NestExpressApplication): Promise<void> {
 
   const viewsPath = join(cwd, 'themes', theme, 'views')
   const assetsPath = join(cwd, 'themes', theme, 'assets')
-  console.log(viewsPath)
-  console.log(assetsPath)
   const env: nunjucks.Environment = nunjucks.configure(viewsPath, {
     autoescape: true,
     watch: true,

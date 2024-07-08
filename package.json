@@ -1,6 +1,6 @@
 {
   "name": "uuice-cli",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "description": "uuice`s blog cli, developing...",
   "main": "dist/index",
   "bin": {

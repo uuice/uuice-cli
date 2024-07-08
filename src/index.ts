@@ -3,6 +3,7 @@ import { Command } from 'commander'
 import { join } from 'node:path'
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises'
 import chalk from 'chalk'
+import { NestExpressApplication } from '@nestjs/platform-express'
 
 export default function (cwd = process.cwd()): void {
   const sourcePath = join(cwd, 'source')
@@ -126,50 +127,67 @@ export default function (cwd = process.cwd()): void {
     .action(async (options) => {
       // TODO: if watch true, Listen to the source folder and regenerate the data.json file
       try {
-        const { bootstrap } = await import('./server/main')
-        await bootstrap({
-          port: options.port,
-          cwd,
-          dbPath: dataBasePath
-        }).then(async (app) => {
-          if (options.watch) {
-            await generateCommandByWatch(
-              postDirPath,
-              pageDirPath,
-              jsonDirPath,
-              ymlDirPath,
-              systemConfigPath,
-              dataBasePath,
-              sourcePath
-            )
+        let app: NestExpressApplication
 
-            const chokidar = await import('chokidar')
-            console.info(`${chalk.cyan('[Info]')}: start listening on data.json`)
-            const watcher = chokidar.watch(dataBasePath, {
-              ignored: /node_modules/,
-              persistent: true
-            })
+        app = await startServer(options.port, cwd, dataBasePath)
 
-            watcher.on('change', async () => {
-              console.info(
-                `${chalk.cyan('[Info]')}: data.json file has been modified, reload the database...`
-              )
-              const { DbService } = await import('./server/core/service/db.service')
-              const dbServer = app.get(DbService)
-              await dbServer.reload()
-              console.info(`${chalk.cyan('[Info]')}: The database is successfully reloaded.`)
-            })
-          }
-          console.log(
-            `${chalk.green('[Success]')}: server started at ${chalk.magenta(options.port)}`
+        if (options.watch) {
+          await generateCommandByWatch(
+            postDirPath,
+            pageDirPath,
+            jsonDirPath,
+            ymlDirPath,
+            systemConfigPath,
+            dataBasePath,
+            sourcePath
           )
-        })
+
+          const chokidar = await import('chokidar')
+          console.info(`${chalk.cyan('[Info]')}: start listening on data.json`)
+          const watcher = chokidar.watch(dataBasePath, {
+            ignored: /node_modules/,
+            persistent: true
+          })
+
+          watcher.on('change', async () => {
+            console.info(
+              `${chalk.cyan('[Info]')}: data.json file has been modified, restart the server...`
+            )
+            // const { DbService } = await import('./server/core/service/db.service')
+            // const dbServer = app.get(DbService)
+            // await dbServer.reload()
+            // console.info(`${chalk.cyan('[Info]')}: The database is successfully reloaded.`)
+            await app.close()
+            console.info(`${chalk.cyan('[Info]')}: The server is successfully closed.`)
+            app = await startServer(options.port, cwd, dataBasePath, true)
+          })
+        }
       } catch (err: any) {
         console.error(`${chalk.red('[Error]')}: ${err?.message || err}`)
       }
     })
 
   program.parse()
+}
+
+async function startServer(port: number, cwd: string, dbPath: string, isRestart: boolean = false) {
+  const { bootstrap } = await import('./server/main')
+  const app = await bootstrap({
+    port,
+    cwd,
+    dbPath
+  })
+
+  if (isRestart) {
+    console.log(
+      `${chalk.green('[Success]')}: server has ${chalk.green('restarted')} at ${chalk.magenta(port)}`
+    )
+  } else {
+    console.log(
+      `${chalk.green('[Success]')}: server has ${chalk.green('started')} at ${chalk.magenta(port)}`
+    )
+  }
+  return app
 }
 
 async function fileExists(filePath: string) {
@@ -239,6 +257,7 @@ async function generateCommandByWatch(
   })
 
   watcher.on('all', async () => {
+    console.info(`${chalk.cyan('[Info]')}: The source file directory has changed`)
     await generateCommand(
       postDirPath,
       pageDirPath,
