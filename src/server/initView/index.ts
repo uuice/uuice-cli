@@ -29,6 +29,8 @@ import {
   TagTest2,
   YmlConfig
 } from './tag'
+import { glob } from 'glob'
+import { compileAndLoadCode } from '../../utils/compileAndLoadCode'
 
 export async function initView(app: NestExpressApplication): Promise<void> {
   const sysConfigService = app.get(SysConfigService)
@@ -107,5 +109,39 @@ async function initTmpExtend(env: nunjucks.Environment, app: NestExpressApplicat
   env.addExtension('PostNext', new PostNext(app))
 
   // Dynamically get user-defined filters, functions, tags and load them to the system
-  // use glob patterns get file paths
+  // use glob patterns get file paths\
+  const configService = app.get(ConfigService)
+  const cwd = configService.getItem(CWD) as string
+  const userFilterPath = join(cwd, 'extend/filter', '**', '*.ts')
+  const userFunctionPath = join(cwd, 'extend/function', '**', '*.ts')
+  const userTagPath = join(cwd, 'extend/tag', '**', '*.ts')
+
+  const jsonUserFilterList: string[] = await glob(userFilterPath.replace(/\\/g, '/'), {
+    ignore: ['node_modules/**', '**/*.d.ts']
+  })
+
+  for (const path of jsonUserFilterList) {
+    const { name, command } = await compileAndLoadCode(path)
+    console.log(name, command)
+    env.addFilter(name, command)
+  }
+
+  const jsonUserFunctionList: string[] = await glob(userFunctionPath.replace(/\\/g, '/'), {
+    ignore: ['node_modules/**', '**/*.d.ts']
+  })
+
+  for (const path of jsonUserFunctionList) {
+    const { name, command } = await compileAndLoadCode(path)
+    console.log(name, command)
+    env.addGlobal(name, command)
+  }
+
+  const jsonUserTagList: string[] = await glob(userTagPath.replace(/\\/g, '/'), {
+    ignore: ['node_modules/**', '**/*.d.ts']
+  })
+  for (const path of jsonUserTagList) {
+    const { name, Command } = await compileAndLoadCode(path)
+    console.log(name, Command)
+    env.addExtension(name, new Command(app))
+  }
 }
