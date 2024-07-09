@@ -105,4 +105,7 @@ async function initTmpExtend(env: nunjucks.Environment, app: NestExpressApplicat
   env.addExtension('PostListByTag', new PostListByTag(app))
   env.addExtension('PostPrev', new PostPrev(app))
   env.addExtension('PostNext', new PostNext(app))
+
+  // Dynamically get user-defined filters, functions, tags and load them to the system
+  // use glob patterns get file paths
 }
