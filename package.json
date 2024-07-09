@@ -1,8 +1,11 @@
 {
   "name": "uuice-cli",
-  "version": "0.0.17",
+  "version": "0.0.18",
   "description": "uuice`s blog cli, developing...",
   "main": "dist/index",
+  "exports": {
+    ".": "./dist/index.js"
+  },
   "bin": {
     "uuice": "bin/uuice"
   },
