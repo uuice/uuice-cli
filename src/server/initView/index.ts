@@ -122,7 +122,6 @@ async function initTmpExtend(env: nunjucks.Environment, app: NestExpressApplicat
 
   for (const path of jsonUserFilterList) {
     const { name, command } = await compileAndLoadCode(path)
-    console.log(name, command)
     env.addFilter(name, command)
   }
 
@@ -132,7 +131,6 @@ async function initTmpExtend(env: nunjucks.Environment, app: NestExpressApplicat
 
   for (const path of jsonUserFunctionList) {
     const { name, command } = await compileAndLoadCode(path)
-    console.log(name, command)
     env.addGlobal(name, command)
   }
 
@@ -141,7 +139,6 @@ async function initTmpExtend(env: nunjucks.Environment, app: NestExpressApplicat
   })
   for (const path of jsonUserTagList) {
     const { name, Command } = await compileAndLoadCode(path)
-    console.log(name, Command)
-    env.addExtension(name, new Command(app))
+    env.addExtension(name, new Command(app, env))
   }
 }
