@@ -1,5 +1,17 @@
 import { NestExpressApplication } from '@nestjs/platform-express'
-import { ConfigService, CWD, SysConfigService } from '../core/service'
+import {
+  CategoryService,
+  ConfigService,
+  CWD,
+  DbService,
+  JsonService,
+  PageService,
+  PostService,
+  SysConfigService,
+  TagService,
+  YmlService
+} from '../core/service'
+
 import { join } from 'node:path'
 import * as nunjucks from 'nunjucks'
 
@@ -59,6 +71,15 @@ export async function initView(app: NestExpressApplication): Promise<void> {
 }
 
 async function initTmpExtend(env: nunjucks.Environment, app: NestExpressApplication) {
+  const categoryService = app.get(CategoryService)
+  const configService = app.get(ConfigService)
+  const dbService = app.get(DbService)
+  const jsonService = app.get(JsonService)
+  const pageService = app.get(PageService)
+  const postService = app.get(PostService)
+  const sysConfigService = app.get(SysConfigService)
+  const tagService = app.get(TagService)
+  const ymlService = app.get(YmlService)
   // const sysConfigService = app.get(SysConfigService)
   // const sysConfig = await sysConfigService.getSysConfig()
   // add global variables and function
@@ -110,7 +131,6 @@ async function initTmpExtend(env: nunjucks.Environment, app: NestExpressApplicat
 
   // Dynamically get user-defined filters, functions, tags and load them to the system
   // use glob patterns get file paths\
-  const configService = app.get(ConfigService)
   const cwd = configService.getItem(CWD) as string
   const userFilterPath = join(cwd, 'extend/filter', '**', '*.ts')
   const userFunctionPath = join(cwd, 'extend/function', '**', '*.ts')
@@ -139,6 +159,22 @@ async function initTmpExtend(env: nunjucks.Environment, app: NestExpressApplicat
   })
   for (const path of jsonUserTagList) {
     const { name, Command } = await compileAndLoadCode(path)
-    env.addExtension(name, new Command(app, env))
+    // Parameter added app env service
+
+    env.addExtension(
+      name,
+      new Command(app, {
+        env,
+        categoryService,
+        configService,
+        dbService,
+        jsonService,
+        pageService,
+        postService,
+        sysConfigService,
+        tagService,
+        ymlService
+      })
+    )
   }
 }

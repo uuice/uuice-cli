@@ -1,13 +1,18 @@
 {
   "name": "uuice-cli",
-  "version": "0.0.18",
+  "version": "0.0.20",
   "description": "uuice`s blog cli, developing...",
-  "main": "dist/index",
+  "main": "./dist/index",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./dist/index.js"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js"
+    },
+    "./*": "./dist/*"
   },
   "bin": {
-    "uuice": "bin/uuice"
+    "uuice": "./bin/uuice"
   },
   "scripts": {
     "dev": "tsc --watch",
