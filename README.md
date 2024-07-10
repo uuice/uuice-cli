@@ -4,6 +4,17 @@
 
 UUICE, a cli tool for the uuice`s blog, can be used as a study project for nestjs.
 
+## api document
+
+[DOC](https://uuice.com/uuice-doc)
+
+[API DOC](https://uuice.com/doc/api)
+
+## Technology
+
+- nestjs: api services and page rendering
+- nunjucks: Template engine
+
 ## Installation
 
 ```bash
@@ -68,15 +79,6 @@ Options:
   -w --watch         Listen to data.json and reload db
   -h, --help         display help for command
 ```
-
-## Technology
-
-- nestjs: api services and page rendering
-- nunjucks: Template engine
-
-## api document
-[DOC](https://uuice.com/uuice-doc)
-[API DOC](https://uuice.com/doc/api)
 
 ## License
 

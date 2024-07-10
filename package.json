@@ -1,6 +1,6 @@
 {
   "name": "uuice-cli",
-  "version": "0.0.23",
+  "version": "0.0.24",
   "description": "uuice`s blog cli, developing...",
   "main": "dist/index",
   "types": "dist/index.d.ts",
@@ -23,9 +23,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/uuice/blog.git"
+    "url": "git+https://github.com/uuice/uuice-cli.git"
   },
-  "homepage": "https://uuice.com",
+  "homepage": "https://github.com/uuice/uuice-cli",
   "keywords": [
     "website",
     "blog"
