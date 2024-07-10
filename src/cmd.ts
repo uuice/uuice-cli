@@ -161,6 +161,9 @@ export default function (cwd = process.cwd()): void {
             console.info(`${chalk.cyan('[Info]')}: The server is successfully closed.`)
             app = await startServer(options.port, cwd, dataBasePath, true)
           })
+
+          // !! TODO: Whether to add a listener to the extend directory
+          // Listen to the extend directory, restart the service if anything changes
         }
       } catch (err: any) {
         console.error(`${chalk.red('[Error]')}: ${err?.message || err}`)
