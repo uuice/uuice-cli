@@ -23,7 +23,6 @@ export const markdownToToc = async (content: string): Promise<string> => {
  */
 export const markdownToHtml = async (content: string): Promise<string> => {
   const markedContent = (await marked(content)).replace(/<h(\d)[^<>]*>(.*?)<\/h\1>/g, (a, b, c) => {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     if (b | (0 === 2)) {
       return `<h${b} id="${generateTocName(c)}">${c}</h${b}>`

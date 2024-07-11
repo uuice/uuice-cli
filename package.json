@@ -1,6 +1,6 @@
 {
   "name": "uuice-cli",
-  "version": "0.0.24",
+  "version": "0.0.25",
   "description": "uuice`s blog cli, developing...",
   "main": "dist/index",
   "types": "dist/index.d.ts",

@@ -112,8 +112,8 @@ async function getFileJsonList(path: string): Promise<PAGE[] | POST[]> {
       tags: json.data.tags || [],
       excerpt: json.data.excerpt || excerpt,
       published: json.data.published || '',
-      content: json.content || '',
-      mdContent: contentToc.mdContent || '',
+      content: contentToc.content || '',
+      mdContent: json.content || '',
       toc: contentToc.toc || '',
       url: titleToUrl(json.data.alias || json.data.title || ''),
       created_timestamp:
@@ -124,15 +124,15 @@ async function getFileJsonList(path: string): Promise<PAGE[] | POST[]> {
         json.data.updated_time || json.data.updated
           ? moment(json.data.updated_time || json.data.updated).valueOf()
           : 0,
-      symbolsCount: symbolsCount(contentToc.mdContent || '')
+      symbolsCount: getWordCount(contentToc.content || '')
     })
   }
   return result
 }
 
-async function getContentToc(content: string): Promise<{ mdContent: string; toc: string }> {
+async function getContentToc(content: string): Promise<{ content: string; toc: string }> {
   return {
-    mdContent: await markdownToHtml(content),
+    content: await markdownToHtml(content),
     toc: await markdownToToc(content)
   }
 }
@@ -220,10 +220,29 @@ async function generateCategoriesTags(
   }
 }
 
+// eslint-disable-next-line no-unused-vars
 function symbolsCount(input: string): number {
   if (!input) {
     return 0
   }
 
   return input?.trim()?.match(/\S/g)?.length || 0
+}
+
+/**
+ * Counts the number of words in a given text, excluding whitespace, invisible characters, and HTML tags.
+ * @param text - The input text to be analyzed.
+ * @returns The number of words in the cleaned text.
+ */
+function getWordCount(text: string): number {
+  // Remove HTML tags
+  const strippedText = text.replace(/<[^>]+>/g, '')
+
+  // Remove whitespace and invisible characters
+  const cleanedText = strippedText.replace(
+    /[\s\u200b-\u200f\u2028-\u202f\u205f-\u206f\ufeff]+/g,
+    ''
+  )
+  // Count the number of characters in the cleaned text
+  return cleanedText.length
 }
