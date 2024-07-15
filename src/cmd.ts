@@ -22,6 +22,16 @@ export default function (cwd = process.cwd()): void {
 
   const program = new Command()
   program.name('uuice-cli').description('CLI to uuice`s blog').version(pkg.version)
+
+  program
+    .command('init')
+    .description('initialize the blog')
+    .argument('<name>', 'blog folder name')
+    .action(async (name) => {
+      // TODO: Create a base project
+      // TODO: git clone the start package
+    })
+
   program
     .command('new')
     .description('generate new post or page')
@@ -40,7 +50,9 @@ export default function (cwd = process.cwd()): void {
           const folderPath = join(postDirPath, options.path)
 
           if (await fileExists(postPath)) {
-            console.error(`${chalk.red('[Error]')}: post ${chalk.magenta(title)} already exists`)
+            console.error(
+              `${chalk.red('[Error]')}: ${formatDate()}: post ${chalk.magenta(title)} already exists`
+            )
           } else {
             if (!(await fileExists(folderPath))) {
               await mkdir(folderPath, { recursive: true })
@@ -55,7 +67,7 @@ export default function (cwd = process.cwd()): void {
 
             await writeFile(postPath, result, 'utf-8')
             console.log(
-              `${chalk.green('[Success]')}: post ${chalk.magenta(title)} created successfully`
+              `${chalk.green('[Success]')}: ${formatDate()}: post ${chalk.magenta(title)} created successfully`
             )
           }
         } else if (type === 'page') {
@@ -66,7 +78,9 @@ export default function (cwd = process.cwd()): void {
           const folderPath = join(pageDirPath, options.path)
 
           if (await fileExists(pagePath)) {
-            console.error(`${chalk.red('[Error]')}: page ${chalk.magenta(title)} already exists`)
+            console.error(
+              `${chalk.red('[Error]')}: ${formatDate()}: page ${chalk.magenta(title)} already exists`
+            )
           } else {
             if (!(await fileExists(folderPath))) {
               await mkdir(folderPath, { recursive: true })
@@ -82,14 +96,14 @@ export default function (cwd = process.cwd()): void {
 
             await writeFile(pagePath, result, 'utf-8')
             console.log(
-              `${chalk.green('[Success]')}: page ${chalk.magenta(title)} created successfully`
+              `${chalk.green('[Success]')}: ${formatDate()}: page ${chalk.magenta(title)} created successfully`
             )
           }
         } else {
-          console.error(`${chalk.red('[Error]')}: Unknown type`)
+          console.error(`${chalk.red('[Error]')}: ${formatDate()}: Unknown type`)
         }
       } catch (err: any) {
-        console.error(`${chalk.red('[Error]')}: ${err?.message || err}`)
+        console.error(`${chalk.red('[Error]')}: ${formatDate()}: ${err?.message || err}`)
       }
     })
 
@@ -143,7 +157,7 @@ export default function (cwd = process.cwd()): void {
           )
 
           const chokidar = await import('chokidar')
-          console.info(`${chalk.cyan('[Info]')}: start listening on data.json`)
+          console.info(`${chalk.cyan('[Info]')}: ${formatDate()}: start listening on data.json`)
           const watcher = chokidar.watch(dataBasePath, {
             ignored: /node_modules/,
             persistent: true
@@ -151,14 +165,16 @@ export default function (cwd = process.cwd()): void {
 
           watcher.on('change', async () => {
             console.info(
-              `${chalk.cyan('[Info]')}: data.json file has been modified, restart the server...`
+              `${chalk.cyan('[Info]')}: ${formatDate()}: data.json file has been modified, restart the server...`
             )
             // const { DbService } = await import('./server/core/service/db.service')
             // const dbServer = app.get(DbService)
             // await dbServer.reload()
             // console.info(`${chalk.cyan('[Info]')}: The database is successfully reloaded.`)
             await app.close()
-            console.info(`${chalk.cyan('[Info]')}: The server is successfully closed.`)
+            console.info(
+              `${chalk.cyan('[Info]')}: ${formatDate()}: The server is successfully closed.`
+            )
             app = await startServer(options.port, cwd, dataBasePath, true)
           })
 
@@ -166,8 +182,19 @@ export default function (cwd = process.cwd()): void {
           // Listen to the extend directory, restart the service if anything changes
         }
       } catch (err: any) {
-        console.error(`${chalk.red('[Error]')}: ${err?.message || err}`)
+        console.error(`${chalk.red('[Error]')}: ${formatDate()}: ${err?.message || err}`)
       }
+    })
+
+  program
+    .command('build')
+    .description('build static files')
+    .action(async (options) => {
+      // TODO: build web statics
+      // TODO: Create the statics of all web pages with nestjs rendering
+      // first start server
+      // second get all links
+      // create file
     })
 
   program.parse()
@@ -183,11 +210,11 @@ async function startServer(port: number, cwd: string, dbPath: string, isRestart:
 
   if (isRestart) {
     console.log(
-      `${chalk.green('[Success]')}: server has ${chalk.green('restarted')} at ${chalk.magenta(port)}`
+      `${chalk.green('[Success]')}: ${formatDate()}: server has ${chalk.green('restarted')} at ${chalk.magenta(port)}`
     )
   } else {
     console.log(
-      `${chalk.green('[Success]')}: server has ${chalk.green('started')} at ${chalk.magenta(port)}`
+      `${chalk.green('[Success]')}: ${formatDate()}: server has ${chalk.green('started')} at ${chalk.magenta(port)}`
     )
   }
   return app
@@ -224,7 +251,7 @@ async function generateCommand(
 ): Promise<void> {
   try {
     const { generate } = await import('./utils/generate')
-    console.info(`${chalk.cyan('[Info]')}: start generating`)
+    console.info(`${chalk.cyan('[Info]')}: ${formatDate()}: start generating`)
     console.time(`${chalk.cyan('[Info]')}: generate data json`)
     await generate(
       postDirPath,
@@ -235,9 +262,9 @@ async function generateCommand(
       dataBasePath
     )
     console.timeEnd(`${chalk.cyan('[Info]')}: generate data json`)
-    console.info(`${chalk.green('[Success]')}: end generating`)
+    console.info(`${chalk.green('[Success]')}: ${formatDate()}: end generating`)
   } catch (err: any) {
-    console.error(`${chalk.red('[Error]')}: ${err?.message || err}`)
+    console.error(`${chalk.red('[Error]')}: ${formatDate()}: ${err?.message || err}`)
   }
 }
 
@@ -251,7 +278,7 @@ async function generateCommandByWatch(
   sourcePath: string
 ) {
   const chokidar = await import('chokidar')
-  console.info(`${chalk.cyan('[Info]')}: start listening source file directory`)
+  console.info(`${chalk.cyan('[Info]')}: ${formatDate()}: start listening source file directory`)
   const watcher = chokidar.watch(sourcePath, {
     ignored: /node_modules/,
     persistent: true,
@@ -260,7 +287,7 @@ async function generateCommandByWatch(
   })
 
   watcher.on('all', async () => {
-    console.info(`${chalk.cyan('[Info]')}: The source file directory has changed`)
+    console.info(`${chalk.cyan('[Info]')}: ${formatDate()}: The source file directory has changed`)
     await generateCommand(
       postDirPath,
       pageDirPath,

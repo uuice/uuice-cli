@@ -16,7 +16,11 @@ export class LinkController {
     viewData.assign('pageType', 'Link')
     viewData.assign('sysConfig', this.sysConfigService.getSysConfig())
     const linkList = this.jsonService.getJsonByAlias('link')
-    const linkArchive = []
+    const linkArchive: {
+      [type: string]: {
+        [key: string]: string | boolean | number
+      }[]
+    }[] = []
     linkList.forEach((list: any) => {
       const index = linkArchive.findIndex((obj) => list.type in obj)
       if (index < 0) {
