@@ -175,6 +175,12 @@ export default function (cwd = process.cwd()): void {
             console.info(
               `${chalk.cyan('[Info]')}: ${formatDate()}: The server is successfully closed.`
             )
+            // Clear module cache
+            // has a bug, DynamicPageModule doesn't reinitialize
+            // Clear the require cache for dynamic imports to ensure re initialization.
+            Object.keys(require.cache).forEach((key) => {
+              delete require.cache[key]
+            })
             app = await startServer(options.port, cwd, dataBasePath, true)
           })
 
@@ -202,6 +208,7 @@ export default function (cwd = process.cwd()): void {
 
 async function startServer(port: number, cwd: string, dbPath: string, isRestart: boolean = false) {
   const { bootstrap } = await import('./server/main')
+
   const app = await bootstrap({
     port,
     cwd,
