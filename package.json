@@ -1,6 +1,6 @@
 {
   "name": "uuice-cli",
-  "version": "0.0.28",
+  "version": "0.0.29",
   "description": "uuice`s blog cli, developing...",
   "main": "dist/index",
   "types": "dist/index.d.ts",
@@ -83,6 +83,7 @@
     "prettier": "^3.3.2",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "tslib": "^2.6.3",
     "typescript": "5.3",
     "uuid": "^10.0.0",
     "xml2js": "^0.6.2"
