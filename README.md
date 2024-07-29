@@ -2,7 +2,7 @@
 
 ## Introduction
 
-UUICE, a cli tool for the uuice`s blog, can be used as a study project for nestjs.
+UUICE, a cli tool for the blog like `hexo`, can be used as a study project for nestjs.
 
 ## api document
 
@@ -45,6 +45,8 @@ server [options] nestjs server
 help [command] display help for command
 ```
 
+## New post or page
+
 ```
 Usage: uuice-cli new [options] <type> <title>
 
@@ -59,6 +61,8 @@ Options:
   -h, --help         display help for command
 ```
 
+## Generate data.json
+
 ```
 Usage: uuice-cli gen [options]
 
@@ -68,6 +72,8 @@ Options:
   -w, --watch  Listen to the source file directory
   -h, --help   display help for command
 ```
+
+## Server
 
 ```
 Usage: uuice-cli server [options]
