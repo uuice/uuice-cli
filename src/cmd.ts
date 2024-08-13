@@ -14,6 +14,8 @@ export default function (cwd = process.cwd()): void {
   const jsonDirPath = join(sourcePath, '_jsons')
   const ymlDirPath = join(sourcePath, '_ymls')
 
+  const cacheDirPath = join(cwd, '.cache')
+
   const pageTemplatePath = join(cwd, 'templates', 'page.njk')
   const postTemplatePath = join(cwd, 'templates', 'post.njk')
 
@@ -120,7 +122,8 @@ export default function (cwd = process.cwd()): void {
           ymlDirPath,
           systemConfigPath,
           dataBasePath,
-          sourcePath
+          sourcePath,
+          cacheDirPath
         )
       }
       await generateCommand(
@@ -129,7 +132,8 @@ export default function (cwd = process.cwd()): void {
         jsonDirPath,
         ymlDirPath,
         systemConfigPath,
-        dataBasePath
+        dataBasePath,
+        cacheDirPath
       )
     })
 
@@ -153,7 +157,8 @@ export default function (cwd = process.cwd()): void {
             ymlDirPath,
             systemConfigPath,
             dataBasePath,
-            sourcePath
+            sourcePath,
+            cacheDirPath
           )
 
           const chokidar = await import('chokidar')
@@ -254,7 +259,8 @@ async function generateCommand(
   jsonDirPath: string,
   ymlDirPath: string,
   systemConfigPath: string,
-  dataBasePath: string
+  dataBasePath: string,
+  cacheDirPath: string
 ): Promise<void> {
   try {
     const { generate } = await import('./utils/generate')
@@ -266,7 +272,8 @@ async function generateCommand(
       jsonDirPath,
       ymlDirPath,
       systemConfigPath,
-      dataBasePath
+      dataBasePath,
+      cacheDirPath
     )
     console.timeEnd(`${chalk.cyan('[Info]')}: generate data json`)
     console.info(`${chalk.green('[Success]')}: ${formatDate()}: end generating`)
@@ -282,7 +289,8 @@ async function generateCommandByWatch(
   ymlDirPath: string,
   systemConfigPath: string,
   dataBasePath: string,
-  sourcePath: string
+  sourcePath: string,
+  cacheDirPath: string
 ) {
   const chokidar = await import('chokidar')
   console.info(`${chalk.cyan('[Info]')}: ${formatDate()}: start listening source file directory`)
@@ -301,7 +309,8 @@ async function generateCommandByWatch(
       jsonDirPath,
       ymlDirPath,
       systemConfigPath,
-      dataBasePath
+      dataBasePath,
+      cacheDirPath
     )
   })
 }

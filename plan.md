@@ -6,7 +6,7 @@
 
 ## Generate data.json
 
-- Calculate the md5 file. If it already exists, the cache is read directly
+- Calculate the md5 file. If it already exists, the cache is read directly `(completed)`
 
 ## Author
 
