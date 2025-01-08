@@ -1,5 +1,6 @@
 import { NestExpressApplication } from '@nestjs/platform-express'
 import {
+  AuthorService,
   CategoryService,
   ConfigService,
   CWD,
@@ -20,6 +21,8 @@ import _ from 'lodash'
 import { Console, date, shorten, stripHtml, symbolsCount, titleToUrl } from './filter'
 import { dateFormat, getColor } from './function'
 import {
+  AuthorItem,
+  AuthorList,
   CategoryItem,
   CategoryList,
   JsonConfig,
@@ -27,6 +30,7 @@ import {
   PageList,
   PostArchive,
   PostItem,
+  PostListByAuthor,
   PostListByCategory,
   PostListByTag,
   PostNext,
@@ -80,6 +84,7 @@ async function initTmpExtend(env: nunjucks.Environment, app: NestExpressApplicat
   const sysConfigService = app.get(SysConfigService)
   const tagService = app.get(TagService)
   const ymlService = app.get(YmlService)
+  const authorService = app.get(AuthorService)
   // const sysConfigService = app.get(SysConfigService)
   // const sysConfig = await sysConfigService.getSysConfig()
   // add global variables and function
@@ -98,6 +103,10 @@ async function initTmpExtend(env: nunjucks.Environment, app: NestExpressApplicat
   env.addFilter('symbolsCount', symbolsCount)
   env.addFilter('stripHtml', stripHtml)
   env.addFilter('titleToUrl', titleToUrl)
+
+  // Author
+  env.addExtension('AuthorList', new AuthorList(app))
+  env.addExtension('AuthorItem', new AuthorItem(app))
 
   // tags
   env.addExtension('TagTest', new TagTest(app))
@@ -126,6 +135,7 @@ async function initTmpExtend(env: nunjucks.Environment, app: NestExpressApplicat
   env.addExtension('PostArchive', new PostArchive(app))
   env.addExtension('PostListByCategory', new PostListByCategory(app))
   env.addExtension('PostListByTag', new PostListByTag(app))
+  env.addExtension('PostListByAuthor', new PostListByAuthor(app))
   env.addExtension('PostPrev', new PostPrev(app))
   env.addExtension('PostNext', new PostNext(app))
 
@@ -173,7 +183,8 @@ async function initTmpExtend(env: nunjucks.Environment, app: NestExpressApplicat
         postService,
         sysConfigService,
         tagService,
-        ymlService
+        ymlService,
+        authorService
       })
     )
   }

@@ -4,24 +4,10 @@ import { join } from 'node:path'
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises'
 import chalk from 'chalk'
 import { NestExpressApplication } from '@nestjs/platform-express'
+import { getPathByCwd, PATH_OBJECT } from './utils/pathHelper'
 
 export default function (cwd = process.cwd()): void {
-  const sourcePath = join(cwd, 'source')
-  const systemConfigPath = join(cwd, 'config.yml')
-  const dataBasePath = join(cwd, 'data.json')
-  const pageDirPath = join(sourcePath, '_pages')
-  const postDirPath = join(sourcePath, '_posts')
-  const jsonDirPath = join(sourcePath, '_jsons')
-  const ymlDirPath = join(sourcePath, '_ymls')
-
-  const cacheDirPath = join(cwd, '.cache')
-
-  const pageTemplatePath = join(cwd, 'templates', 'page.njk')
-  const postTemplatePath = join(cwd, 'templates', 'post.njk')
-
-  const pageTemplatePathDefault = join(__dirname, '../templates', 'page.njk')
-  const postTemplatePathDefault = join(__dirname, '../templates', 'post.njk')
-
+  const pathObj = getPathByCwd(cwd)
   const program = new Command()
   program.name('uuice-cli').description('CLI to uuice`s blog').version(pkg.version)
 
@@ -36,7 +22,7 @@ export default function (cwd = process.cwd()): void {
 
   program
     .command('new')
-    .description('generate new post or page')
+    .description('generate new post or page or author')
     .argument('<type>', 'type only support post or page')
     .argument('<title>', 'title')
     .option('-p, --path <path>', 'md file path', '')
@@ -45,11 +31,13 @@ export default function (cwd = process.cwd()): void {
         // check template existed before creating
         const { v6: uuid } = await import('uuid')
         if (type === 'post') {
-          const isExistUserTemplate = await fileExists(postTemplatePath)
-          const templatePath = isExistUserTemplate ? postTemplatePath : postTemplatePathDefault
-          const postPath = join(postDirPath, options.path, title + '.md')
+          const isExistUserTemplate = await fileExists(pathObj.postTemplatePath)
+          const templatePath = isExistUserTemplate
+            ? pathObj.postTemplatePath
+            : pathObj.postTemplatePathDefault
+          const postPath = join(pathObj.postDirPath, options.path, title + '.md')
           const templateStr = await readFile(templatePath, 'utf-8')
-          const folderPath = join(postDirPath, options.path)
+          const folderPath = join(pathObj.postDirPath, options.path)
 
           if (await fileExists(postPath)) {
             console.error(
@@ -73,11 +61,13 @@ export default function (cwd = process.cwd()): void {
             )
           }
         } else if (type === 'page') {
-          const isExistUserTemplate = await fileExists(pageTemplatePath)
-          const templatePath = isExistUserTemplate ? pageTemplatePath : pageTemplatePathDefault
-          const pagePath = join(pageDirPath, options.path, title + '.md')
+          const isExistUserTemplate = await fileExists(pathObj.pageTemplatePath)
+          const templatePath = isExistUserTemplate
+            ? pathObj.pageTemplatePath
+            : pathObj.pageTemplatePathDefault
+          const pagePath = join(pathObj.pageDirPath, options.path, title + '.md')
           const templateStr = await readFile(templatePath, 'utf-8')
-          const folderPath = join(pageDirPath, options.path)
+          const folderPath = join(pathObj.pageDirPath, options.path)
 
           if (await fileExists(pagePath)) {
             console.error(
@@ -101,6 +91,37 @@ export default function (cwd = process.cwd()): void {
               `${chalk.green('[Success]')}: ${formatDate()}: page ${chalk.magenta(title)} created successfully`
             )
           }
+        } else if (type === 'author') {
+          const isExistUserTemplate = await fileExists(pathObj.authorTemplatePath)
+          const templatePath = isExistUserTemplate
+            ? pathObj.authorTemplatePath
+            : pathObj.authorTemplatePathDefault
+          const authorPath = join(pathObj.authorDirPath, options.path, title + '.md')
+          const templateStr = await readFile(templatePath, 'utf-8')
+          const folderPath = join(pathObj.authorDirPath, options.path)
+
+          if (await fileExists(authorPath)) {
+            console.error(
+              `${chalk.red('[Error]')}: ${formatDate()}: Author ${chalk.magenta(title)} already exists`
+            )
+          } else {
+            if (!(await fileExists(folderPath))) {
+              await mkdir(folderPath, { recursive: true })
+            }
+
+            const nunjucks = await import('nunjucks')
+            const result = nunjucks.renderString(templateStr, {
+              id: uuid(),
+              title,
+              created_time: formatDate(),
+              updated_time: formatDate()
+            })
+
+            await writeFile(authorPath, result, 'utf-8')
+            console.log(
+              `${chalk.green('[Success]')}: ${formatDate()}: author ${chalk.magenta(title)} created successfully`
+            )
+          }
         } else {
           console.error(`${chalk.red('[Error]')}: ${formatDate()}: Unknown type`)
         }
@@ -115,26 +136,9 @@ export default function (cwd = process.cwd()): void {
     .option('-w, --watch', 'Listen to the source file directory')
     .action(async (options) => {
       if (options.watch) {
-        await generateCommandByWatch(
-          postDirPath,
-          pageDirPath,
-          jsonDirPath,
-          ymlDirPath,
-          systemConfigPath,
-          dataBasePath,
-          sourcePath,
-          cacheDirPath
-        )
+        await generateCommandByWatch(pathObj)
       }
-      await generateCommand(
-        postDirPath,
-        pageDirPath,
-        jsonDirPath,
-        ymlDirPath,
-        systemConfigPath,
-        dataBasePath,
-        cacheDirPath
-      )
+      await generateCommand(pathObj)
     })
 
   program
@@ -147,23 +151,14 @@ export default function (cwd = process.cwd()): void {
       try {
         let app: NestExpressApplication
 
-        app = await startServer(options.port, cwd, dataBasePath)
+        app = await startServer(options.port, cwd, pathObj.dataBasePath)
 
         if (options.watch) {
-          await generateCommandByWatch(
-            postDirPath,
-            pageDirPath,
-            jsonDirPath,
-            ymlDirPath,
-            systemConfigPath,
-            dataBasePath,
-            sourcePath,
-            cacheDirPath
-          )
+          await generateCommandByWatch(pathObj)
 
           const chokidar = await import('chokidar')
           console.info(`${chalk.cyan('[Info]')}: ${formatDate()}: start listening on data.json`)
-          const watcher = chokidar.watch(dataBasePath, {
+          const watcher = chokidar.watch(pathObj.dataBasePath, {
             ignored: /node_modules/,
             persistent: true
           })
@@ -186,7 +181,7 @@ export default function (cwd = process.cwd()): void {
             Object.keys(require.cache).forEach((key) => {
               delete require.cache[key]
             })
-            app = await startServer(options.port, cwd, dataBasePath, true)
+            app = await startServer(options.port, cwd, pathObj.dataBasePath, true)
           })
 
           // !! TODO: Whether to add a listener to the extend directory
@@ -253,28 +248,12 @@ function formatDate(data?: string): string {
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
 }
 
-async function generateCommand(
-  postDirPath: string,
-  pageDirPath: string,
-  jsonDirPath: string,
-  ymlDirPath: string,
-  systemConfigPath: string,
-  dataBasePath: string,
-  cacheDirPath: string
-): Promise<void> {
+async function generateCommand(pathObject: PATH_OBJECT): Promise<void> {
   try {
     const { generate } = await import('./utils/generate')
     console.info(`${chalk.cyan('[Info]')}: ${formatDate()}: start generating`)
     console.time(`${chalk.cyan('[Info]')}: generate data json`)
-    await generate(
-      postDirPath,
-      pageDirPath,
-      jsonDirPath,
-      ymlDirPath,
-      systemConfigPath,
-      dataBasePath,
-      cacheDirPath
-    )
+    await generate(pathObject)
     console.timeEnd(`${chalk.cyan('[Info]')}: generate data json`)
     console.info(`${chalk.green('[Success]')}: ${formatDate()}: end generating`)
   } catch (err: any) {
@@ -282,19 +261,10 @@ async function generateCommand(
   }
 }
 
-async function generateCommandByWatch(
-  postDirPath: string,
-  pageDirPath: string,
-  jsonDirPath: string,
-  ymlDirPath: string,
-  systemConfigPath: string,
-  dataBasePath: string,
-  sourcePath: string,
-  cacheDirPath: string
-) {
+async function generateCommandByWatch(pathObject: PATH_OBJECT) {
   const chokidar = await import('chokidar')
   console.info(`${chalk.cyan('[Info]')}: ${formatDate()}: start listening source file directory`)
-  const watcher = chokidar.watch(sourcePath, {
+  const watcher = chokidar.watch(pathObject.sourcePath, {
     ignored: /node_modules/,
     persistent: true,
     depth: 99,
@@ -303,14 +273,6 @@ async function generateCommandByWatch(
 
   watcher.on('all', async () => {
     console.info(`${chalk.cyan('[Info]')}: ${formatDate()}: The source file directory has changed`)
-    await generateCommand(
-      postDirPath,
-      pageDirPath,
-      jsonDirPath,
-      ymlDirPath,
-      systemConfigPath,
-      dataBasePath,
-      cacheDirPath
-    )
+    await generateCommand(pathObject)
   })
 }

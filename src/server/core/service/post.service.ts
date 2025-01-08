@@ -3,6 +3,7 @@ import { DbService } from './db.service'
 import {
   ARCHIVES_DATE_YEAR,
   ARCHIVES_DATE_YEAR_MONTH,
+  AUTHOR,
   CATEGORY,
   LIST_POST_ITEM,
   POST,
@@ -15,13 +16,15 @@ import { isEqual, omit } from 'lodash'
 import { CategoryService } from './category.service'
 import { TagService } from './tag.service'
 import moment from 'moment'
+import { AuthorService } from './author.service'
 
 @Injectable()
 export class PostService {
   constructor(
     private dbService: DbService,
     private categoryService: CategoryService,
-    private tagService: TagService
+    private tagService: TagService,
+    private authorService: AuthorService
   ) {}
 
   getPostList(): LIST_POST_ITEM[] {
@@ -162,6 +165,37 @@ export class PostService {
         .getInstance()
         .get('posts')
         .filter((post: POST) => postIdArray.includes(post.id))
+        .map((item: POST) => omit(item, ['content', 'mdContent', 'toc']))
+        // .sortBy('created_timestamp')
+        .orderBy('created_timestamp', 'desc')
+        .value() || []
+    )
+  }
+
+  getPostListByAuthorId(authorId: string): LIST_POST_ITEM[] {
+    const author = this.authorService.getAuthorById(authorId)
+    if (!author) return []
+    return this.getPostListByAuthor(author)
+  }
+
+  getPostListByAuthorTitle(authorTitle: string): LIST_POST_ITEM[] {
+    const author = this.authorService.getAuthorByTitle(authorTitle)
+    if (!author) return []
+    return this.getPostListByAuthor(author)
+  }
+
+  getPostListByAuthorUrl(authorUrl: string): LIST_POST_ITEM[] {
+    const author = this.authorService.getAuthorByUrl(authorUrl)
+    if (!author) return []
+    return this.getPostListByAuthor(author)
+  }
+
+  getPostListByAuthor(author: AUTHOR): LIST_POST_ITEM[] {
+    return (
+      this.dbService
+        .getInstance()
+        .get('posts')
+        .filter((post: POST) => post.authorIds.includes(author.id as string))
         .map((item: POST) => omit(item, ['content', 'mdContent', 'toc']))
         // .sortBy('created_timestamp')
         .orderBy('created_timestamp', 'desc')

@@ -9,39 +9,37 @@ import { generateUUID } from './uuid'
 import moment from 'moment'
 import { titleToUrl } from './titleToUrl'
 import md5 from 'md5'
+import { AUTHOR } from '../types/author'
+import { PATH_OBJECT } from './pathHelper'
 
-export const generate = async (
-  postDirPath: string,
-  pageDirPath: string,
-  jsonDirPath: string,
-  ymlDirPath: string,
-  systemConfigPath: string,
-  dataBasePath: string,
-  cacheDirPath: string
-) => {
+export const generate = async (pathObject: PATH_OBJECT) => {
   // Determine whether cacheDirPath exists, and create it if it does not
-  if (!(await isExists(cacheDirPath))) {
-    await mkdir(cacheDirPath, { recursive: true })
+  if (!(await isExists(pathObject.cacheDirPath))) {
+    await mkdir(pathObject.cacheDirPath, { recursive: true })
   }
 
-  const postPattern = join(postDirPath, '**', '*.md')
-  const postList = await generatePosts(postPattern, cacheDirPath)
+  const authorPattern = join(pathObject.authorDirPath, '**', '*.md')
+  const authorList = await generateAuthors(authorPattern, pathObject.cacheDirPath)
 
-  const pagePattern = join(pageDirPath, '**', '*.md')
-  const pageList = await generatePages(pagePattern, cacheDirPath)
+  const postPattern = join(pathObject.postDirPath, '**', '*.md')
+  const postList = await generatePosts(postPattern, pathObject.cacheDirPath)
 
-  const jsonPattern = join(jsonDirPath, '**', '*.json')
+  const pagePattern = join(pathObject.pageDirPath, '**', '*.md')
+  const pageList = await generatePages(pagePattern, pathObject.cacheDirPath)
+
+  const jsonPattern = join(pathObject.jsonDirPath, '**', '*.json')
   const jsonList = await generateJsons(jsonPattern)
 
-  const ymlPattern = join(ymlDirPath, '**', '*.yml')
+  const ymlPattern = join(pathObject.ymlDirPath, '**', '*.yml')
   const ymlList = await generateYmls(ymlPattern)
 
-  const systemConfig = await generateSystemConfig(systemConfigPath)
+  const systemConfig = await generateSystemConfig(pathObject.systemConfigPath)
   const categoryTag = await generateCategoriesTags(postList, pageList)
 
   const data = {
     posts: postList,
     pages: pageList,
+    authors: authorList,
     ...jsonList,
     ...ymlList,
     systemConfig,
@@ -52,7 +50,7 @@ export const generate = async (
   }
 
   // write to database file
-  await writeFile(dataBasePath, JSON.stringify(data, null, 2), 'utf8')
+  await writeFile(pathObject.dataBasePath, JSON.stringify(data, null, 2), 'utf8')
 }
 
 async function generatePages(path: string, cacheDirPath: string): Promise<PAGE[]> {
@@ -61,6 +59,10 @@ async function generatePages(path: string, cacheDirPath: string): Promise<PAGE[]
 
 async function generatePosts(path: string, cacheDirPath: string): Promise<POST[]> {
   return await getFileJsonList(path, cacheDirPath)
+}
+
+async function generateAuthors(path: string, cacheDirPath: string): Promise<AUTHOR[]> {
+  return await getAuthorFileJsonList(path, cacheDirPath)
 }
 
 async function generateJsons(path: string): Promise<JSON_OBJ> {
@@ -141,6 +143,66 @@ async function getFileJsonList(path: string, cacheDirPath: string): Promise<PAGE
           json.data.updated_time || json.data.updated
             ? moment(json.data.updated_time || json.data.updated).valueOf()
             : 0,
+        authorIds: json.data.authorIds || [],
+        symbolsCount: getWordCount(contentToc.content || '')
+      }
+      result.push(data)
+      // write cache data
+      await writeFile(fileCachePath, JSON.stringify(data, null, 2), 'utf8')
+    }
+  }
+  return result
+}
+async function getAuthorFileJsonList(path: string, cacheDirPath: string): Promise<AUTHOR[]> {
+  const mdFileList: string[] = await glob(path.replace(/\\/g, '/'), { ignore: 'node_modules/**' })
+  const promiseList: Promise<string>[] = []
+  mdFileList.forEach((file: string) => {
+    const promise = readFile(file, 'utf-8')
+    promiseList.push(promise)
+  })
+
+  const fileList = await Promise.all(promiseList)
+
+  const result: AUTHOR[] = []
+  for (const page of fileList) {
+    // Calculate MD5 to determine whether the cache exists
+    // get md5 hash
+    const fileMd5 = md5(page)
+    // if the cache exists, then use it
+    const fileCachePath = join(cacheDirPath, fileMd5)
+    if (await isExists(fileCachePath)) {
+      const content = await readFile(fileCachePath, 'utf-8')
+      const data = JSON.parse(content.toString())
+      result.push(data)
+    } else {
+      const json = matter(page, { excerpt: true, excerpt_separator: '<!-- more -->' })
+      const contentToc = await getContentToc(json.content)
+      const excerpt = json.data.excerpt || (await markdownToHtml(json.excerpt)) || ''
+      const data = {
+        ...json.data,
+        id: json.data.id ? json.data.id.toString() : '',
+        title: json.data.title || '',
+        alias: json.data.alias || '',
+        cover: json.data.cover || '',
+        created_time: json.data.created_time || json.data.date || '',
+        updated_time: json.data.updated_time || json.data.updated || '',
+        categories: json.data.categories || [],
+        tags: json.data.tags || [],
+        excerpt: json.data.excerpt || excerpt,
+        published: json.data.published || '',
+        content: contentToc.content || '',
+        mdContent: json.content || '',
+        toc: contentToc.toc || '',
+        url: titleToUrl(json.data.alias || json.data.title || ''),
+        created_timestamp:
+          json.data.created_time || json.data.date
+            ? moment(json.data.created_time || json.data.date).valueOf()
+            : 0,
+        updated_timestamp:
+          json.data.updated_time || json.data.updated
+            ? moment(json.data.updated_time || json.data.updated).valueOf()
+            : 0,
+        isDefault: json.data.isDefault || false,
         symbolsCount: getWordCount(contentToc.content || '')
       }
       result.push(data)

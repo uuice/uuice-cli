@@ -18,6 +18,6 @@ export interface ARTICLE {
   updated_timestamp: number
   url: string
   symbolsCount: number
-
+  authorIds: Array<string>
   [key: string]: string | Array<string> | boolean | number
 }

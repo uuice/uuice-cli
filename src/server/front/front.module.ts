@@ -18,6 +18,7 @@ import { RssController } from './controller/rss.controller'
 import { SitemapController } from './controller/sitemap.controller'
 import { DynamicPageModule } from './dynamic-page.module'
 import { CommonDataMiddleware } from './middleware/common-data.middleware'
+import { AuthorController } from './controller/author.controller'
 
 @Module({
   imports: [CoreModule, DynamicPageModule.forRoot()],
@@ -34,7 +35,8 @@ import { CommonDataMiddleware } from './middleware/common-data.middleware'
     TagController,
     TestController,
     RssController,
-    SitemapController
+    SitemapController,
+    AuthorController
   ],
   providers: [
     {

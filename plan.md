@@ -10,9 +10,9 @@
 
 ## Author
 
-- author settings
-- author page post relation
-- author`s page
+- author settings `(completed)`
+- author page post relation `(completed)`
+- author\`s page `(completed)`
 - new page, post can select author
 
 ## Admin

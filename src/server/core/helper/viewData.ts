@@ -41,7 +41,9 @@ export const mixedDataView = (viewData: ViewData): ViewData => {
     isTag: pageType === 'Tag',
     isCategory: pageType === 'Category',
     isArchive: pageType === 'Archive',
-    isLink: pageType === 'Link'
+    isLink: pageType === 'Link',
+    isAuthor: pageType === 'Author',
+    isAuthorArchive: pageType === 'AuthorArchive'
   }
   viewData.assign(typeObj)
   return viewData

@@ -9,6 +9,7 @@ import { CoreModule } from '../core/core.module'
 import { PageController } from './controller/page.controller'
 import { LowdbUndefinedMiddleware } from './middleware/lowdb-undefined.middleware'
 import { YmlController } from './controller/yml.controller'
+import { AuthorController } from './controller/author.controller'
 
 @SetMetadata(MODULE_PATH, '/api')
 @Module({
@@ -20,7 +21,8 @@ import { YmlController } from './controller/yml.controller'
     CategoryController,
     SysConfigController,
     JsonController,
-    YmlController
+    YmlController,
+    AuthorController
   ]
 })
 export class ApiModule {

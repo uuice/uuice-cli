@@ -57,7 +57,7 @@ export function PostListByCategory(app: NestExpressApplication): void {
       context.ctx.list = postService.getPostListByCategoryTitle(args.title)
       const result = new nunjucks.runtime.SafeString(body())
       return callback(null, result)
-    } else if (args.id || args.title) {
+    } else if (args.url) {
       context.ctx.list = postService.getPostListByCategoryUrl(args.url)
       const result = new nunjucks.runtime.SafeString(body())
       return callback(null, result)
@@ -87,16 +87,54 @@ export function PostListByTag(app: NestExpressApplication): void {
   }
   this.run = async function (context: any, args: any, body: any, callback: any) {
     const postService = app.get(PostService)
-    if (args.id || args.title) {
+    if (args.id) {
       context.ctx.list = postService.getPostListByTagId(args.id)
       const result = new nunjucks.runtime.SafeString(body())
       return callback(null, result)
-    } else if (args.id || args.title) {
+    } else if (args.title) {
       context.ctx.list = postService.getPostListByTagTitle(args.title)
       const result = new nunjucks.runtime.SafeString(body())
       return callback(null, result)
-    } else if (args.id || args.title) {
+    } else if (args.url) {
       context.ctx.list = postService.getPostListByTagUrl(args.url)
+      const result = new nunjucks.runtime.SafeString(body())
+      return callback(null, result)
+    } else {
+      const result = new nunjucks.runtime.SafeString('')
+      return callback(null, result)
+    }
+  }
+}
+
+export function PostListByAuthor(app: NestExpressApplication): void {
+  // tag with endpoint test
+  this.tags = ['PostListByAuthor']
+  this.parse = function (parser: any, nodes: any) {
+    const tok = parser.nextToken()
+    const args = parser.parseSignature(null, true)
+    // !nunjucks has a bug, when args.children is empty
+    // add an empty node to args.children
+    if (!args.children.length) {
+      // Handle empty arguments
+      args.addChild(new nodes.Literal(0, 0, ''))
+    }
+    parser.advanceAfterBlockEnd(tok.value)
+    const body = parser.parseUntilBlocks('endPostListByAuthor') // eng tag
+    parser.advanceAfterBlockEnd()
+    return new nodes.CallExtensionAsync(this, 'run', args, [body]) // async
+  }
+  this.run = async function (context: any, args: any, body: any, callback: any) {
+    const postService = app.get(PostService)
+    if (args.id) {
+      context.ctx.list = postService.getPostListByAuthorId(args.id)
+      const result = new nunjucks.runtime.SafeString(body())
+      return callback(null, result)
+    } else if (args.title) {
+      context.ctx.list = postService.getPostListByAuthorTitle(args.title)
+      const result = new nunjucks.runtime.SafeString(body())
+      return callback(null, result)
+    } else if (args.url) {
+      context.ctx.list = postService.getPostListByAuthorUrl(args.url)
       const result = new nunjucks.runtime.SafeString(body())
       return callback(null, result)
     } else {

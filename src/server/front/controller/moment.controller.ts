@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common'
+import { Controller, Get, Render } from '@nestjs/common'
 import { mixedDataView, ViewData } from '../../core/helper/viewData'
 import { SysConfigService } from '../../core/service'
 
@@ -7,6 +7,7 @@ export class MomentController {
   constructor(private readonly sysConfigService: SysConfigService) {}
 
   @Get('')
+  @Render('moment')
   index() {
     const viewData = new ViewData()
     viewData.assign('pageType', 'Moment')
