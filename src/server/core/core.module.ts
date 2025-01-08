@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common'
 import {
+  AuthorService,
   CategoryService,
   ConfigService,
   DbService,
@@ -21,7 +22,8 @@ import {
     PageService,
     SysConfigService,
     JsonService,
-    YmlService
+    YmlService,
+    AuthorService
   ],
   exports: [
     DbService,
@@ -32,7 +34,8 @@ import {
     PageService,
     SysConfigService,
     JsonService,
-    YmlService
+    YmlService,
+    AuthorService
   ]
 })
 export class CoreModule {}
